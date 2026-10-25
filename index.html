@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Admin — Super Chakki</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--primary:#1E5631;--primary-dark:#143D22;--red:#D32F2F;--green:#2F6B2F;--blue:#1E40AF;--purple:#7C3AED;--yellow:#A16207;--cream:#F7E8B5;--bg:#FCFAF5;--ink:#252525;--muted:#858176;--border:#F1E8D6;--radius:16px;--radius-sm:10px;--header-h:60px;--bottom-h:68px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-top:var(--header-h);padding-bottom:calc(var(--bottom-h) + env(safe-area-inset-bottom));min-height:100vh;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;margin:0;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select,textarea{font-family:inherit;font-size:15px;width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;outline:none;color:var(--ink);}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,86,49,.15);}
+label{font-size:12.5px;font-weight:600;margin-bottom:6px;display:block;color:var(--ink);}
+.hidden{display:none !important;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;transition:.15s;border:1px solid transparent;white-space:nowrap;}
+.btn svg{width:16px;height:16px;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-outline{background:#fff;color:var(--primary);border-color:var(--border);}
+.btn-outline:hover{background:var(--cream);}
+.btn-danger{background:#FDECEC;color:var(--red);border-color:#f5c6c6;}
+.btn-danger:hover{background:#fbdada;}
+.btn-sm{padding:8px 12px;font-size:12.5px;border-radius:8px;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+#loading{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.spinner{width:48px;height:48px;border:4px solid var(--cream);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#FBF1CC,#F7E8B5);margin-top:calc(-1 * var(--header-h));padding-top:var(--header-h);}
+.auth-card{background:#fff;border-radius:20px;padding:32px 26px;box-shadow:0 10px 40px rgba(0,0,0,.1);width:100%;max-width:400px;}
+.auth-card h1{font-size:23px;margin-bottom:6px;color:var(--primary);text-align:center;}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px;}
+.auth-card .logo-mark{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:grid;place-items:center;margin:0 auto 18px;color:#fff;}
+.auth-card .logo-mark svg{width:32px;height:32px;}
+.auth-card .form-group{margin-bottom:14px;}
+.error{background:#FDECEC;color:#A02F2F;font-size:12.5px;padding:10px 12px;border-radius:8px;margin-top:12px;display:none;}
+.error.show{display:block;}
+.app-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;z-index:50;box-shadow:0 1px 8px rgba(0,0,0,.04);}
+.header-logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--primary);}
+.header-logo .dot{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:grid;place-items:center;color:#fff;}
+.header-logo .dot svg{width:18px;height:18px;}
+.header-spacer{flex:1;}
+.header-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted);transition:.15s;}
+.header-btn svg{width:20px;height:20px;}
+.header-btn:hover{background:var(--bg);color:var(--primary);}
+.app-main{padding:16px;max-width:900px;margin:0 auto;}
+.page-title{font-size:22px;margin-bottom:4px;color:var(--ink);}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.03);}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.card-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--cream);border:1px solid var(--border);flex-shrink:0;}
+.card-thumb-empty{width:52px;height:52px;border-radius:10px;background:var(--cream);display:grid;place-items:center;color:var(--primary);flex-shrink:0;}
+.card-thumb-empty svg{width:24px;height:24px;opacity:.5;}
+.card-body{flex:1;min-width:0;}
+.card-title{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:2px;font-family:'Inter',sans-serif;word-break:break-word;}
+.card-meta{font-size:12px;color:var(--muted);}
+.card-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+@media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;}
+.stat-label{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.stat-value{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--primary);line-height:1.1;}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;background:#EAF7EA;color:var(--green);}
+.pill.pending{background:#FEF3C7;color:var(--yellow);}
+.pill.placed{background:#DBEAFE;color:var(--blue);}
+.pill.out{background:#EDE9FE;color:var(--purple);}
+.pill.delivered{background:#EAF7EA;color:var(--green);}
+.pill.cancelled{background:#FDECEC;color:var(--red);}
+.pill.hidden-status{background:#F3F4F6;color:var(--muted);}
+.pill.info{background:#DBEAFE;color:var(--blue);}
+.empty-state{background:#fff;border:1px dashed var(--border);border-radius:var(--radius);padding:44px 20px;text-align:center;color:var(--muted);font-size:14px;}
+.empty-state .icon{color:var(--primary);opacity:.4;margin-bottom:12px;}
+.empty-state .icon svg{width:44px;height:44px;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+@media(min-width:640px){.modal{align-items:center;padding:20px;}}
+.modal-content{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;animation:slideUp .25s ease;}
+@media(min-width:640px){.modal-content{border-radius:20px;max-width:680px;}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;}
+.modal-header h2{font-size:16.5px;}
+.modal-close{width:34px;height:34px;border-radius:50%;background:var(--bg);display:grid;place-items:center;}
+.modal-close svg{width:16px;height:16px;}
+.modal-body{padding:18px 20px 24px;}
+.form-row{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:560px){.form-row{grid-template-columns:1fr 1fr;}}
+.form-group{margin-bottom:14px;}
+.checkbox-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;padding:10px 0;cursor:pointer;}
+.checkbox-label input{width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:400;}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--border);margin-top:16px;flex-wrap:wrap;}
+.img-uploader{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;background:var(--bg);transition:.15s;cursor:pointer;position:relative;}
+.img-uploader:hover{border-color:var(--primary);background:#FBF6E8;}
+.img-uploader.dragover{border-color:var(--primary);background:var(--cream);}
+.img-uploader input[type=file]{display:none;}
+.img-uploader-icon{color:var(--primary);margin-bottom:6px;}
+.img-uploader-icon svg{width:28px;height:28px;}
+.img-uploader-text{font-size:13px;font-weight:600;color:var(--primary);}
+.img-uploader-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.img-preview{position:relative;display:inline-block;max-width:100%;margin-top:10px;}
+.img-preview img{max-width:200px;max-height:200px;border-radius:10px;border:1px solid var(--border);object-fit:cover;display:block;}
+.img-preview .remove-img{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+.img-preview .remove-img svg{width:14px;height:14px;}
+.settings-group{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.settings-group h3{font-size:14.5px;margin-bottom:14px;color:var(--primary);}
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;height:calc(var(--bottom-h) + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:6px 0 env(safe-area-inset-bottom);z-index:80;box-shadow:0 -2px 12px rgba(0,0,0,.04);}
+.bottom-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:10px;font-weight:600;flex:1;padding:6px 4px;transition:.15s;}
+.bottom-tabs button.active{color:var(--primary);}
+.bottom-tabs button svg{width:22px;height:22px;}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(2px);}
+.sheet-overlay.show{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:91;padding:10px 0 calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .25s;max-height:85vh;overflow-y:auto;}
+.sheet.show{transform:translateY(0);}
+.sheet-handle{width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px;}
+.sheet-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 24px 10px;}
+.sheet-list{display:flex;flex-direction:column;padding:0 12px;}
+.sheet-list button{padding:14px 16px;font-size:15px;font-weight:500;text-align:left;border-radius:10px;display:flex;align-items:center;gap:14px;color:var(--ink);transition:.15s;}
+.sheet-list button:hover{background:var(--bg);}
+.sheet-list button svg{width:20px;height:20px;color:var(--primary);}
+.sheet-list button.danger svg{color:var(--red);}
+.toast{position:fixed;bottom:calc(var(--bottom-h) + 20px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:500;z-index:200;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-label{color:var(--muted);font-weight:500;flex-shrink:0;min-width:90px;}
+.detail-value{text-align:right;color:var(--ink);word-break:break-word;flex:1;}
+.copy-btn{background:var(--cream);color:var(--primary);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
+.copy-btn svg{width:12px;height:12px;}
+.copy-btn:hover{background:var(--primary);color:#fff;}
+.order-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;transition:.15s;}
+.order-card:active{transform:scale(.99);background:var(--bg);}
+.order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.order-num{font-family:ui-monospace,monospace;font-weight:700;font-size:14.5px;color:var(--ink);word-break:break-all;}
+.order-id{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--muted);margin-top:2px;}
+.order-customer{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.order-meta{font-size:11.5px;color:var(--muted);}
+.order-items-preview{font-size:12px;color:var(--ink);background:var(--bg);padding:8px 10px;border-radius:8px;margin:8px 0;line-height:1.4;}
+.order-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px dashed var(--border);font-size:13px;}
+.order-total{font-weight:700;color:var(--primary);}
+.user-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;font-family:'Playfair Display',serif;flex-shrink:0;}
+.status-select{width:100%;padding:12px 14px;font-size:14px;font-weight:600;border-radius:10px;border:2px solid var(--border);background:#fff;}
+.status-select:focus{border-color:var(--primary);}
+.video-preview{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;margin-bottom:12px;}
+.video-preview iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+@media(max-width:480px){.app-main{padding:12px;}.page-title{font-size:19px;}.modal-content{max-height:95vh;}.detail-row{font-size:13px;}}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><p style="color:var(--muted);font-size:13px;">Loading...</p></div>
+
+<div id="loginView" class="auth-screen hidden">
+  <div class="auth-card">
+    <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+    <h1>Admin Login</h1>
+    <p class="sub">Sign in to manage your store</p>
+    <form id="loginForm">
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" required autocomplete="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required autocomplete="current-password" placeholder="........"></div>
+      <button type="submit" id="loginBtn" class="btn btn-primary btn-block" style="padding:13px;">Sign In</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="dashboard" class="hidden">
+  <header class="app-header">
+    <div class="header-logo">
+      <span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+      Super Chakki Admin
+    </div>
+    <div class="header-spacer"></div>
+    <button class="header-btn" onclick="loadAll()" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+    <button class="header-btn" onclick="logout()" title="Logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+  </header>
+
+  <main class="app-main" id="content"></main>
+
+  <nav class="bottom-tabs">
+    <button data-tab="overview" class="active" onclick="goTab('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button data-tab="orders" onclick="goTab('orders')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Orders</span>
+    </button>
+    <button data-tab="products" onclick="goTab('products')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span>Products</span>
+    </button>
+    <button data-tab="users" onclick="goTab('users')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Users</span>
+    </button>
+    <button onclick="openMore()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+</div>
+
+<div class="sheet-overlay" id="moreOverlay" onclick="closeMore()"></div>
+<div class="sheet" id="moreSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">More Sections</div>
+  <div class="sheet-list">
+    <button onclick="goTab('slides');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Slides (Homepage Banners)</button>
+    <button onclick="goTab('media');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Photos (Shop Gallery)</button>
+    <button onclick="goTab('video');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> Video</button>
+    <button onclick="goTab('faqs');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> FAQs</button>
+    <button onclick="goTab('testimonials');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Testimonials / Reviews</button>
+    <button onclick="goTab('settings');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings (Razorpay, Maps)</button>
+    <button onclick="goTab('admins');closeMore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Admins</button>
+    <button onclick="logout()" class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout</button>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header"><h2 id="modalTitle">Edit</h2><button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://kwdfcydhwnyotgkusnqg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3ZGZjeWRod255b3Rna3VzbnFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NjY4NTYsImV4cCI6MjEwODM0Mjg1Nn0.X6Rixnnu1jAczQ_Ag9p7OTefqBAF15J4MGeQXclkFcs';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentTab = 'overview';
+const data = { products: [], settings: [], media: [], slides: [], faqs: [], testimonials: [], admins: [], orders: [], users: [] };
+let pendingImages = {};
+
+const $ = id => document.getElementById(id);
+const esc = s => { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; };
+const fmt = n => '₹' + Math.round(n || 0).toLocaleString('en-IN');
+const fmtDate = d => new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const fmtDateOnly = d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+function findById(arr, id) {
+  if (id === undefined || id === null || id === '') return null;
+  const target = String(id).trim();
+  return (arr || []).find(x => String(x.id).trim() === target) || null;
+}
+async function fetchByIdFromDB(table, id) {
+  const { data: row, error } = await sb.from(table).select('*').eq('id', id).maybeSingle();
+  if (error || !row) return null;
+  return row;
+}
+
+const ORDER_STATUSES = ['Pending', 'Placed', 'Out for Delivery', 'Delivered', 'Cancelled'];
+const statusClass = s => ({ 'Pending':'pending', 'Placed':'placed', 'Out for Delivery':'out', 'Delivered':'delivered', 'Cancelled':'cancelled' }[s] || 'pending');
+
+const IC = {
+  edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  del: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  wheat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  box: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`,
+  help: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+  phone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`
+};
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(window._tt); window._tt = setTimeout(() => t.classList.remove('show'), 2800); }
+function openModal(title, html) { $('modalTitle').textContent = title; $('modalBody').innerHTML = html; $('modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; setupDragDrop(); }
+function closeModal() { $('modal').classList.add('hidden'); document.body.style.overflow = ''; pendingImages = {}; }
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+    else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+    toast('Copied');
+  } catch (err) { toast('Copy failed'); }
+}
+
+function setupDragDrop() {
+  document.querySelectorAll('.img-uploader').forEach(up => {
+    if (up._dd) return; up._dd = true;
+    ['dragover','dragenter'].forEach(ev => up.addEventListener(ev, e => { e.preventDefault(); up.classList.add('dragover'); }));
+    ['dragleave','drop'].forEach(ev => up.addEventListener(ev, e => { e.preventDefault(); up.classList.remove('dragover'); }));
+    up.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')) handleFileSelect(f, up.dataset.inputId, up.dataset.previewId);
+    });
+  });
+}
+function handleFileSelect(file, inputId, previewId) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Max 5MB allowed'); return; }
+  pendingImages[inputId] = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const p = $(previewId);
+    if (p) p.innerHTML = `<div class="img-preview"><img src="${ev.target.result}"><button type="button" class="remove-img" onclick="removeImage('${inputId}','${previewId}',event)">${IC.x}</button></div>`;
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage(inputId, previewId, e) {
+  if (e) e.stopPropagation();
+  delete pendingImages[inputId];
+  const p = $(previewId); if (p) p.innerHTML = '';
+  const inp = $(inputId); if (inp) inp.value = '';
+}
+function fileSelectHandler(e) { const f = e.target.files[0]; if (f) handleFileSelect(f, e.target.id, e.target.dataset.previewTarget); }
+async function uploadImage(file) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `img-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await sb.storage.from('product-images').upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) throw new Error(error.message);
+  return sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+}
+
+/* AUTH */
+async function boot() { const { data: { session } } = await sb.auth.getSession(); await handleSession(session); sb.auth.onAuthStateChange((_, s) => handleSession(s)); }
+async function handleSession(session) {
+  if (!session) { currentUser = null; showLogin(); return; }
+  currentUser = session.user;
+  const { data: rows, error } = await sb.from('admin_users').select('email').eq('email', currentUser.email);
+  if (error || !rows || rows.length === 0) { await sb.auth.signOut(); showLogin('Access denied. Email not authorized.'); return; }
+  showDashboard();
+}
+function showLogin(msg) { $('loading').classList.add('hidden'); $('dashboard').classList.add('hidden'); $('loginView').classList.remove('hidden'); document.body.style.paddingBottom = '0'; const err = $('loginError'); if (msg) { err.textContent = msg; err.classList.add('show'); } else err.classList.remove('show'); }
+function showDashboard() { $('loading').classList.add('hidden'); $('loginView').classList.add('hidden'); $('dashboard').classList.remove('hidden'); document.body.style.paddingBottom = ''; loadAll(); }
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault(); const btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Signing in...'; $('loginError').classList.remove('show');
+  const { error } = await sb.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPassword').value });
+  btn.disabled = false; btn.textContent = 'Sign In';
+  if (error) { $('loginError').textContent = error.message; $('loginError').classList.add('show'); }
+});
+async function logout() { if (!confirm('Sign out?')) return; await sb.auth.signOut(); }
+
+function goTab(tab) { currentTab = tab; document.querySelectorAll('.bottom-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab)); renderTab(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function openMore() { $('moreOverlay').classList.add('show'); $('moreSheet').classList.add('show'); }
+function closeMore() { $('moreOverlay').classList.remove('show'); $('moreSheet').classList.remove('show'); }
+
+/* LOAD ALL */
+async function loadAll() {
+  const loaders = [
+    { key: 'products', table: 'products', order: 'name' },
+    { key: 'settings', table: 'store_settings', order: null },
+    { key: 'media', table: 'shop_media', order: 'created_at' },
+    { key: 'slides', table: 'slides', order: 'sort_order' },
+    { key: 'faqs', table: 'faqs', order: 'sort_order' },
+    { key: 'testimonials', table: 'testimonials', order: 'sort_order' },
+    { key: 'admins', table: 'admin_users', order: 'created_at' }
+  ];
+  for (const l of loaders) {
+    try {
+      let q = sb.from(l.table).select('*');
+      if (l.order) q = q.order(l.order);
+      let r = await q;
+      if (r.error && l.order) r = await sb.from(l.table).select('*');
+      if (!r.error) data[l.key] = r.data || [];
+    } catch (e) { console.warn(`[loadAll:${l.key}]`, e); }
+  }
+  // Orders bhi load karo immediately so overview/stats accurate rahe
+  await loadOrders();
+  renderTab();
+}
+
+async function loadOrders() {
+  const { data: o, error } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('[loadOrders]', error.message); return []; }
+  data.orders = o || [];
+  return data.orders;
+}
+
+async function loadUsers() {
+  const userMap = {};
+
+  // 1. user_profiles se base data
+  try {
+    const { data: profiles } = await sb.from('user_profiles').select('*');
+    if (profiles) profiles.forEach(p => {
+      userMap[p.email] = {
+        id: p.id, email: p.email,
+        full_name: p.full_name || '',
+        address: p.address || '',
+        phone: '',
+        created_at: p.created_at,
+        _source: 'profile'
+      };
+    });
+  } catch (e) { console.warn('[loadUsers] profiles', e); }
+
+  // 2. Orders se enrich (phone, address, latest name)
+  try {
+    const { data: orders } = await sb.from('orders').select('user_id, user_name, created_at, shipping, pin_code');
+    if (orders) {
+      // Latest pehle
+      orders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      orders.forEach(o => {
+        if (!o.user_id) return;
+        const sh = o.shipping || {};
+        const addr = [sh.house, sh.street, sh.landmark, sh.city, o.pin_code].filter(Boolean).join(', ');
+        if (!userMap[o.user_id]) {
+          userMap[o.user_id] = {
+            id: o.user_id, email: o.user_id,
+            full_name: o.user_name || '',
+            address: addr,
+            phone: sh.phone || '',
+            created_at: o.created_at,
+            _source: 'orders'
+          };
+        } else {
+          const u = userMap[o.user_id];
+          if (!u.phone && sh.phone) u.phone = sh.phone;
+          if (!u.address && addr) u.address = addr;
+          if (!u.full_name && o.user_name) u.full_name = o.user_name;
+        }
+      });
+    }
+  } catch (e) { console.warn('[loadUsers] orders', e); }
+
+  data.users = Object.values(userMap).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  return data.users;
+}
+
+function renderTab() {
+  const c = $('content');
+  switch (currentTab) {
+    case 'overview': c.innerHTML = renderOverview(); break;
+    case 'orders': renderOrdersTab(); break;
+    case 'products': c.innerHTML = renderProducts(); break;
+    case 'users': renderUsersTab(); break;
+    case 'slides': c.innerHTML = renderSlides(); break;
+    case 'media': c.innerHTML = renderMedia(); break;
+    case 'video': c.innerHTML = renderVideo(); break;
+    case 'faqs': c.innerHTML = renderFaqs(); break;
+    case 'testimonials': c.innerHTML = renderTestimonials(); break;
+    case 'settings': c.innerHTML = renderSettings(); break;
+    case 'admins': c.innerHTML = renderAdmins(); break;
+    default: c.innerHTML = renderOverview();
+  }
+}
+
+/* OVERVIEW — clean, no system status */
+function renderOverview() {
+  const active = data.products.filter(p => p.is_active).length;
+  const out = data.products.filter(p => !p.stock || p.stock <= 0).length;
+  const pendingOrders = data.orders.filter(o => o.status === 'Pending').length;
+  const totalRevenue = data.orders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (o.total || 0), 0);
+
+  return `<h1 class="page-title">Dashboard</h1><p class="page-sub">${esc(currentUser.email)}</p>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">${data.products.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value" style="color:${pendingOrders?'var(--yellow)':'var(--primary)'}">${pendingOrders}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">${data.orders.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">${fmt(totalRevenue)}</div></div>
+    </div>
+
+    <div class="settings-group"><h3>Quick Actions</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-outline btn-block" style="justify-content:flex-start;" onclick="goTab('orders')">${IC.box} View Orders</button>
+        <button class="btn btn-outline btn-block" style="justify-content:flex-start;" onclick="goTab('products')">${IC.wheat} Manage Products</button>
+        <button class="btn btn-outline btn-block" style="justify-content:flex-start;" onclick="goTab('users')">${IC.user} View Users</button>
+        <button class="btn btn-outline btn-block" style="justify-content:flex-start;" onclick="goTab('settings')">${IC.help} Store Settings</button>
+      </div>
+    </div>`;
+}
+
+/* ORDERS */
+async function renderOrdersTab() {
+  $('content').innerHTML = `<h1 class="page-title">Orders</h1><p class="page-sub">Loading...</p>`;
+  await loadOrders();
+  renderOrdersList();
+}
+function renderOrdersList() {
+  const c = $('content');
+  if (data.orders.length === 0) {
+    c.innerHTML = `<h1 class="page-title">Orders</h1><p class="page-sub">0 orders</p><div class="empty-state"><div class="icon">${IC.box}</div><p>No orders yet.</p></div>`;
+    return;
+  }
+  const cards = data.orders.map(o => {
+    const items = o.items || [];
+    const itemsCount = items.reduce((s, i) => s + (i.quantity || 0), 0);
+    const preview = items.slice(0, 2).map(it => `${esc(it.productName)} (${esc(it.packSize)}) × ${it.quantity}`).join(', ');
+    const more = items.length > 2 ? ` +${items.length - 2} more` : '';
+    const shortId = String(o.id || '').slice(0, 8);
+    return `<div class="order-card" onclick="viewOrder('${esc(String(o.id))}')">
+      <div class="order-head">
+        <div>
+          <div class="order-num">${esc(o.order_number)}</div>
+          <div class="order-id">ID: ${esc(shortId)}</div>
+        </div>
+        <span class="pill ${statusClass(o.status)}">${esc(o.status)}</span>
+      </div>
+      <div class="order-customer">${esc(o.user_name || '—')}</div>
+      <div class="order-meta">${fmtDate(o.created_at)} · ${esc(o.pin_code || '')} ${o.area ? '('+esc(o.area)+')' : ''}</div>
+      <div class="order-items-preview">${preview}${more || ''}</div>
+      <div class="order-footer">
+        <span class="order-meta">${itemsCount} item${itemsCount !== 1 ? 's' : ''}</span>
+        <span class="order-total">${fmt(o.total)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  c.innerHTML = `<h1 class="page-title">Orders</h1><p class="page-sub">${data.orders.length} total</p>${cards}`;
+}
+
+function viewOrder(id) {
+  const o = findById(data.orders, id);
+  if (!o) { toast('Order not found'); return; }
+  const ship = o.shipping || {};
+  const items = (o.items || []).map(it => `<div class="detail-row"><div class="detail-label" style="min-width:auto;color:var(--ink);font-weight:600;">${esc(it.productName)}<br><span style="font-size:11.5px;color:var(--muted);font-weight:400;">${esc(it.packSize)} × ${it.quantity}</span></div><div class="detail-value">${fmt(it.lineTotal)}</div></div>`).join('');
+  const addressFull = [ship.house, ship.street, ship.landmark, ship.city, o.pin_code].filter(Boolean).join(', ');
+  const fullId = String(o.id || '');
+  openModal('Order Details', `
+    <div style="background:var(--bg);padding:14px;border-radius:12px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">Order Number</span><span class="pill ${statusClass(o.status)}">${esc(o.status)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-family:ui-monospace,monospace;font-weight:700;font-size:15px;flex:1;word-break:break-all;">${esc(o.order_number)}</span>
+        <button class="copy-btn" onclick="copyText('${esc(o.order_number)}')">${IC.copy} Copy</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:8px;">
+        <strong>Order ID:</strong> <span style="font-family:ui-monospace,monospace;">${esc(fullId)}</span>
+        <button class="copy-btn" style="margin-left:6px;" onclick="copyText('${esc(fullId)}')">${IC.copy}</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:4px;">${fmtDate(o.created_at)}</div>
+    </div>
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Customer</h3>
+    <div class="card" style="margin-bottom:14px;padding:14px;">
+      <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${esc(o.user_name)}</span></div>
+      <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${esc(o.user_id)}</span></div>
+      ${ship.phone ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${esc(ship.phone)} <a href="tel:${esc(ship.phone)}" class="copy-btn" style="text-decoration:none;">${IC.phone} Call</a></span></div>` : ''}
+    </div>
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Delivery Address</h3>
+    <div class="card" style="margin-bottom:14px;padding:14px;">
+      <div style="font-size:13.5px;line-height:1.7;color:var(--ink);">${esc(addressFull)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">Area: ${esc(o.area || '—')}</div>
+      ${ship.instructions ? `<div style="font-size:12.5px;color:var(--muted);margin-top:8px;"><em>Note: ${esc(ship.instructions)}</em></div>` : ''}
+      <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="copyText(\`${esc(addressFull).replace(/`/g,'\\`')}\`)">${IC.copy} Copy Address</button>
+    </div>
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Items</h3>
+    <div class="card" style="margin-bottom:14px;padding:14px;">${items || '<p class="hint">No items</p>'}</div>
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Payment</h3>
+    <div class="card" style="margin-bottom:16px;padding:14px;">
+      <div class="detail-row"><span class="detail-label">Method</span><span class="detail-value">${esc(o.payment_method)}</span></div>
+      ${o.payment_id ? `<div class="detail-row"><span class="detail-label">Txn ID</span><span class="detail-value" style="font-size:11.5px;font-family:ui-monospace,monospace;">${esc(o.payment_id)}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">${fmt(o.subtotal)}</span></div>
+      <div class="detail-row"><span class="detail-label">Delivery</span><span class="detail-value">${o.delivery == 0 ? 'Free' : fmt(o.delivery)}</span></div>
+      <div class="detail-row" style="padding-top:12px;margin-top:6px;border-top:2px solid var(--border);"><span class="detail-label" style="color:var(--ink);font-weight:700;">Total</span><span class="detail-value" style="color:var(--primary);font-weight:700;font-size:16px;">${fmt(o.total)}</span></div>
+    </div>
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Update Status</h3>
+    <select class="status-select" onchange="updateOrderStatus('${esc(String(o.id))}', this.value)">${ORDER_STATUSES.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}</select>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal()">Close</button></div>
+  `);
+}
+async function updateOrderStatus(id, status) {
+  const res = await sb.from('orders').update({ status }).eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast('Status: ' + status);
+  const idx = data.orders.findIndex(o => String(o.id) === String(id));
+  if (idx >= 0) data.orders[idx].status = status;
+  renderOrdersList(); closeModal();
+}
+
+/* USERS */
+async function renderUsersTab() {
+  $('content').innerHTML = `<h1 class="page-title">Users</h1><p class="page-sub">Loading...</p>`;
+  await Promise.all([loadUsers(), loadOrders()]);
+  renderUsersList();
+}
+function renderUsersList() {
+  const c = $('content');
+  if (data.users.length === 0) {
+    c.innerHTML = `<h1 class="page-title">Users</h1><p class="page-sub">0 users</p><div class="empty-state"><div class="icon">${IC.user}</div><p>No users yet.</p><p class="hint" style="margin-top:8px;">Users appear after signup or after placing orders.</p></div>`;
+    return;
+  }
+  const cards = data.users.map(u => {
+    const userOrders = data.orders.filter(o => String(o.user_id) === String(u.email));
+    const totalSpent = userOrders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (o.total || 0), 0);
+    const initial = (u.full_name || u.email || '?').charAt(0).toUpperCase();
+    return `<div class="card" style="cursor:pointer;" onclick="viewUser('${esc(String(u.id))}')">
+      <div class="card-header" style="margin-bottom:0;">
+        <div class="user-avatar">${initial}</div>
+        <div class="card-body">
+          <div class="card-title">${esc(u.full_name || 'Customer')}</div>
+          <div class="card-meta">${esc(u.email)}</div>
+          ${u.phone ? `<div class="card-meta" style="margin-top:2px;">Phone: ${esc(u.phone)}</div>` : ''}
+          <div class="card-meta" style="margin-top:2px;">${userOrders.length} order${userOrders.length !== 1 ? 's' : ''} · ${fmt(totalSpent)} spent</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  c.innerHTML = `<h1 class="page-title">Users</h1><p class="page-sub">${data.users.length} registered</p>${cards}`;
+}
+
+function viewUser(id) {
+  const u = findById(data.users, id);
+  if (!u) { toast('User not found'); return; }
+  const userOrders = data.orders.filter(o => String(o.user_id) === String(u.email))
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  const totalSpent = userOrders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (o.total || 0), 0);
+  const deliveredCount = userOrders.filter(o => o.status === 'Delivered').length;
+  const latestOrder = userOrders[0];
+
+  const orderCards = userOrders.map(o => {
+    const items = o.items || [];
+    const preview = items.slice(0, 2).map(it => `${esc(it.productName)} (${esc(it.packSize)}) × ${it.quantity}`).join(', ');
+    const more = items.length > 2 ? ` +${items.length - 2} more` : '';
+    return `<div class="order-card" onclick="closeModal();setTimeout(()=>viewOrder('${esc(String(o.id))}'),100)">
+      <div class="order-head">
+        <div><div class="order-num">${esc(o.order_number)}</div><div class="order-id">ID: ${esc(String(o.id).slice(0,8))}</div></div>
+        <span class="pill ${statusClass(o.status)}">${esc(o.status)}</span>
+      </div>
+      <div class="order-meta">${fmtDate(o.created_at)}</div>
+      <div class="order-items-preview">${preview}${more}</div>
+      <div class="order-footer"><span class="order-meta">${items.length} item${items.length !== 1 ? 's' : ''}</span><span class="order-total">${fmt(o.total)}</span></div>
+    </div>`;
+  }).join('');
+
+  openModal('User Profile', `
+    <div style="text-align:center;padding:10px 0 20px;">
+      <div class="user-avatar" style="width:72px;height:72px;font-size:28px;margin:0 auto 12px;">${(u.full_name || u.email || '?').charAt(0).toUpperCase()}</div>
+      <div style="font-size:17px;font-weight:600;">${esc(u.full_name || 'Customer')}</div>
+      <div style="font-size:13px;color:var(--muted);">${esc(u.email)}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${esc(u.email)}</span></div>
+      ${u.phone ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${esc(u.phone)} <a href="tel:${esc(u.phone)}" class="copy-btn" style="text-decoration:none;">${IC.phone} Call</a></span></div>` : '<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" style="color:var(--muted);">Not saved</span></div>'}
+      <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${esc(u.address || 'Not saved')}</span></div>
+      <div class="detail-row"><span class="detail-label">Joined</span><span class="detail-value">${fmtDateOnly(u.created_at)}</span></div>
+      ${latestOrder ? `<div class="detail-row"><span class="detail-label">Last Order</span><span class="detail-value">${fmtDateOnly(latestOrder.created_at)}</span></div>` : ''}
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:14px;">
+      <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">${userOrders.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value">${deliveredCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value">${fmt(totalSpent)}</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Order</div><div class="stat-value">${userOrders.length ? fmt(totalSpent / Math.max(1, userOrders.filter(o=>o.status!=='Cancelled').length)) : '₹0'}</div></div>
+    </div>
+
+    <h3 style="font-size:14px;color:var(--primary);margin-bottom:8px;">Order History</h3>
+    ${orderCards || '<p class="hint">No orders yet.</p>'}
+    <div class="form-actions"><button class="btn btn-outline btn-block" onclick="closeModal()">Close</button></div>
+  `);
+}
+
+/* PRODUCTS */
+function renderProducts() {
+  const cards = data.products.map(p => `
+    <div class="card">
+      <div class="card-header">
+        ${p.image_url ? `<img src="${esc(p.image_url)}" class="card-thumb" onerror="this.outerHTML='<div class=&quot;card-thumb-empty&quot;>${IC.wheat.replace(/"/g,'&quot;')}</div>'">` : `<div class="card-thumb-empty">${IC.wheat}</div>`}
+        <div class="card-body">
+          <div class="card-title">${esc(p.name)}</div>
+          <div class="card-meta">${esc(p.category)} · ${p.stock > 0 ? 'Stock: ' + p.stock : '<span style="color:var(--red);">Out of stock</span>'}</div>
+          <div class="card-meta" style="margin-top:2px;">${p.price != null ? fmt(p.price) + ' / ' + esc(p.unit) : 'Price TBC'}</div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="editProduct('${esc(String(p.id))}')">${IC.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${esc(String(p.id))}')">${IC.del} Delete</button>
+        ${p.is_active ? '' : '<span class="pill hidden-status" style="margin-left:auto;">Hidden</span>'}
+      </div>
+    </div>
+  `).join('');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;">
+    <div><h1 class="page-title">Products</h1><p class="page-sub" style="margin:0;">${data.products.length} total</p></div>
+    <button class="btn btn-primary" onclick="editProduct()">${IC.plus} Add</button>
+  </div>
+  ${data.products.length === 0 ? `<div class="empty-state"><div class="icon">${IC.wheat}</div><p>No products yet.</p><button class="btn btn-primary" style="margin-top:12px;" onclick="editProduct()">Add First Product</button></div>` : cards}`;
+}
+async function editProduct(id) {
+  let p = {};
+  if (id) {
+    p = findById(data.products, id);
+    if (!p) { p = await fetchByIdFromDB('products', id); if (!p) { toast('Product not found'); return; } }
+  }
+  openModal(id ? 'Edit Product' : 'Add Product', `
+    <form onsubmit="saveProduct(event, '${esc(String(id || ''))}')">
+      <div class="form-group"><label>Photo</label>
+        <div class="img-uploader" data-input-id="p-img" data-preview-id="p-prev" onclick="document.getElementById('p-img').click()">
+          <input type="file" id="p-img" accept="image/*" data-preview-target="p-prev" onchange="fileSelectHandler(event)">
+          <div class="img-uploader-icon">${IC.upload}</div>
+          <div class="img-uploader-text">Tap to upload</div>
+          <div class="img-uploader-sub">JPG, PNG, WEBP · Max 5MB</div>
+        </div>
+        <div id="p-prev" style="text-align:center;">${p.image_url ? `<div class="img-preview"><img src="${esc(p.image_url)}"><button type="button" class="remove-img" onclick="removeExisting('p-prev','p-existing-img','p-img',event)">${IC.x}</button></div>` : ''}</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Name *</label><input id="p-name" required value="${esc(p.name || '')}"></div>
+        <div class="form-group"><label>Category *</label><select id="p-cat" required>${['wheat','multigrain','millets','others'].map(c => `<option value="${c}" ${p.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Price (₹)</label><input type="number" step="0.01" id="p-price" value="${p.price ?? ''}" placeholder="Blank = TBC"></div>
+        <div class="form-group"><label>Unit</label><input id="p-unit" value="${esc(p.unit || 'kg')}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Stock</label><input type="number" id="p-stock" value="${p.stock ?? 0}"></div>
+        <div class="form-group"><label>Pack sizes (comma)</label><input id="p-packs" value="${esc((p.pack_sizes || []).join(', '))}" placeholder="500g, 1kg, 5kg"></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="p-desc" rows="3">${esc(p.description || '')}</textarea></div>
+      <div class="form-group"><label class="checkbox-label"><input type="checkbox" id="p-active" ${p.is_active !== false ? 'checked' : ''}> Show on website</label></div>
+      <input type="hidden" id="p-existing-img" value="${esc(p.image_url || '')}">
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary" id="p-save">Save</button></div>
+    </form>
+  `);
+}
+function removeExisting(previewId, existingId, fileInputId, e) {
+  e.stopPropagation();
+  if ($(previewId)) $(previewId).innerHTML = '';
+  if ($(existingId)) $(existingId).value = '';
+  if ($(fileInputId)) $(fileInputId).value = '';
+  delete pendingImages[fileInputId];
+}
+async function saveProduct(e, id) {
+  e.preventDefault(); const btn = $('p-save');
+  let imageUrl = $('p-existing-img')?.value || '';
+  if (pendingImages['p-img']) {
+    btn.disabled = true; btn.textContent = 'Uploading...';
+    try { imageUrl = await uploadImage(pendingImages['p-img']); }
+    catch (err) { btn.disabled = false; btn.textContent = 'Save'; toast('Upload failed: ' + err.message); return; }
+    btn.textContent = 'Saving...';
+  } else { btn.disabled = true; btn.textContent = 'Saving...'; }
+  const priceVal = $('p-price').value.trim();
+  const payload = { name: $('p-name').value.trim(), category: $('p-cat').value, price: priceVal === '' ? null : parseFloat(priceVal), unit: $('p-unit').value.trim() || 'kg', stock: parseInt($('p-stock').value) || 0, is_active: $('p-active').checked, pack_sizes: $('p-packs').value.split(',').map(s => s.trim()).filter(Boolean), description: $('p-desc').value.trim(), image_url: imageUrl || null };
+  const res = id ? await sb.from('products').update(payload).eq('id', id).select() : await sb.from('products').insert(payload).select();
+  btn.disabled = false; btn.textContent = 'Save';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast(id ? 'Product updated' : 'Product created');
+  closeModal(); await loadAll();
+}
+async function deleteProduct(id) {
+  const p = findById(data.products, id);
+  if (!p) { toast('Not found'); return; }
+  if (!confirm(`Delete "${p.name}"?`)) return;
+  const res = await sb.from('products').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast('Product deleted'); await loadAll();
+}
+
+/* SLIDES */
+function renderSlides() {
+  const cards = data.slides.map(s => `
+    <div class="card">
+      <div class="card-header">
+        ${s.image_url ? `<img src="${esc(s.image_url)}" class="card-thumb">` : `<div class="card-thumb-empty">${IC.image}</div>`}
+        <div class="card-body"><div class="card-title">${esc(s.title)}</div><div class="card-meta">${esc((s.description || '').slice(0, 60))}</div><div class="card-meta" style="margin-top:2px;">Button: ${esc(s.button_text)} → ${esc(s.button_link)}</div></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="editSlide('${esc(String(s.id))}')">${IC.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSlide('${esc(String(s.id))}')">${IC.del} Delete</button>
+        ${s.is_active ? '' : '<span class="pill hidden-status" style="margin-left:auto;">Hidden</span>'}
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;">
+    <div><h1 class="page-title">Slides</h1><p class="page-sub" style="margin:0;">${data.slides.length} total</p></div>
+    <button class="btn btn-primary" onclick="editSlide()">${IC.plus} Add</button>
+  </div>
+  ${data.slides.length === 0 ? `<div class="empty-state"><div class="icon">${IC.image}</div><p>No slides yet.</p></div>` : cards}`;
+}
+async function editSlide(id) {
+  let s = {};
+  if (id) {
+    s = findById(data.slides, id);
+    if (!s) { s = await fetchByIdFromDB('slides', id); if (!s) { toast('Slide not found'); return; } }
+  }
+  openModal(id ? 'Edit Slide' : 'Add Slide', `
+    <form onsubmit="saveSlide(event, '${esc(String(id || ''))}')">
+      <div class="form-group"><label>Banner Image (optional)</label>
+        <div class="img-uploader" data-input-id="s-img" data-preview-id="s-prev" onclick="document.getElementById('s-img').click()">
+          <input type="file" id="s-img" accept="image/*" data-preview-target="s-prev" onchange="fileSelectHandler(event)">
+          <div class="img-uploader-icon">${IC.upload}</div>
+          <div class="img-uploader-text">Tap to upload banner</div>
+          <div class="img-uploader-sub">Max 5MB</div>
+        </div>
+        <div id="s-prev" style="text-align:center;">${s.image_url ? `<div class="img-preview"><img src="${esc(s.image_url)}"><button type="button" class="remove-img" onclick="removeExisting('s-prev','s-existing-img','s-img',event)">${IC.x}</button></div>` : ''}</div>
+      </div>
+      <div class="form-group"><label>Title *</label><input id="s-title" required value="${esc(s.title || '')}"></div>
+      <div class="form-group"><label>Description *</label><textarea id="s-desc" rows="2" required>${esc(s.description || '')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Button Text</label><input id="s-btn" value="${esc(s.button_text || 'Shop Now')}"></div>
+        <div class="form-group"><label>Button Link</label><select id="s-link">${['home','shop','about','contact'].map(v => `<option value="${v}" ${s.button_link===v?'selected':''}>${v}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Sort Order</label><input type="number" id="s-order" value="${s.sort_order ?? 0}"></div>
+        <div class="form-group"><label class="checkbox-label" style="padding-top:26px;"><input type="checkbox" id="s-active" ${s.is_active !== false ? 'checked' : ''}> Active</label></div>
+      </div>
+      <input type="hidden" id="s-existing-img" value="${esc(s.image_url || '')}">
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary" id="s-save">Save</button></div>
+    </form>
+  `);
+}
+async function saveSlide(e, id) {
+  e.preventDefault(); const btn = $('s-save');
+  let imageUrl = $('s-existing-img')?.value || '';
+  if (pendingImages['s-img']) {
+    btn.disabled = true; btn.textContent = 'Uploading...';
+    try { imageUrl = await uploadImage(pendingImages['s-img']); }
+    catch (err) { btn.disabled = false; btn.textContent = 'Save'; toast('Upload failed: ' + err.message); return; }
+  }
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const payload = { title: $('s-title').value.trim(), description: $('s-desc').value.trim(), button_text: $('s-btn').value.trim() || 'Shop Now', button_link: $('s-link').value, sort_order: parseInt($('s-order').value) || 0, is_active: $('s-active').checked, image_url: imageUrl || null };
+  const res = id ? await sb.from('slides').update(payload).eq('id', id).select() : await sb.from('slides').insert(payload).select();
+  btn.disabled = false; btn.textContent = 'Save';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast(id ? 'Slide updated' : 'Slide created'); closeModal(); await loadAll();
+}
+async function deleteSlide(id) {
+  if (!confirm('Delete this slide?')) return;
+  const res = await sb.from('slides').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked'); return; }
+  toast('Slide deleted'); await loadAll();
+}
+
+/* MEDIA */
+function renderMedia() {
+  const cards = data.media.map(m => `
+    <div class="card">
+      ${m.image_url ? `<img src="${esc(m.image_url)}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px;" onerror="this.style.display='none'">` : ''}
+      <div class="card-title">${esc(m.title || 'Untitled')}</div>
+      <div class="card-meta">${esc(m.description || '')}</div>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="editMedia('${esc(String(m.id))}')">${IC.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMedia('${esc(String(m.id))}')">${IC.del} Delete</button>
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;">
+    <div><h1 class="page-title">Photos</h1><p class="page-sub" style="margin:0;">${data.media.length} total</p></div>
+    <button class="btn btn-primary" onclick="editMedia()">${IC.plus} Add</button>
+  </div>
+  ${data.media.length === 0 ? `<div class="empty-state"><div class="icon">${IC.camera}</div><p>No photos yet.</p><button class="btn btn-primary" style="margin-top:12px;" onclick="editMedia()">Add First Photo</button></div>` : cards}`;
+}
+async function editMedia(id) {
+  let m = {};
+  if (id) {
+    m = findById(data.media, id);
+    if (!m) { m = await fetchByIdFromDB('shop_media', id); if (!m) { toast('Photo not found'); return; } }
+  }
+  openModal(id ? 'Edit Photo' : 'Add Photo', `
+    <form onsubmit="saveMedia(event, '${esc(String(id || ''))}')">
+      <div class="form-group"><label>Photo *</label>
+        <div class="img-uploader" data-input-id="m-img" data-preview-id="m-prev" onclick="document.getElementById('m-img').click()">
+          <input type="file" id="m-img" accept="image/*" data-preview-target="m-prev" onchange="fileSelectHandler(event)">
+          <div class="img-uploader-icon">${IC.upload}</div>
+          <div class="img-uploader-text">Tap to upload</div>
+          <div class="img-uploader-sub">Max 5MB</div>
+        </div>
+        <div id="m-prev" style="text-align:center;">${m.image_url ? `<div class="img-preview"><img src="${esc(m.image_url)}"><button type="button" class="remove-img" onclick="removeExisting('m-prev','m-existing-img','m-img',event)">${IC.x}</button></div>` : ''}</div>
+      </div>
+      <div class="form-group"><label>Title *</label><input id="m-title" required value="${esc(m.title || '')}"></div>
+      <div class="form-group"><label>Description</label><textarea id="m-desc" rows="2">${esc(m.description || '')}</textarea></div>
+      <input type="hidden" id="m-existing-img" value="${esc(m.image_url || '')}">
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary" id="m-save">Save</button></div>
+    </form>
+  `);
+}
+async function saveMedia(e, id) {
+  e.preventDefault(); const btn = $('m-save');
+  let imageUrl = $('m-existing-img')?.value || '';
+  if (!imageUrl && !pendingImages['m-img']) { toast('Photo required'); return; }
+  if (pendingImages['m-img']) {
+    btn.disabled = true; btn.textContent = 'Uploading...';
+    try { imageUrl = await uploadImage(pendingImages['m-img']); }
+    catch (err) { btn.disabled = false; btn.textContent = 'Save'; toast('Upload failed: ' + err.message); return; }
+  }
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const payload = { title: $('m-title').value.trim(), description: $('m-desc').value.trim(), image_url: imageUrl };
+  const res = id ? await sb.from('shop_media').update(payload).eq('id', id).select() : await sb.from('shop_media').insert(payload).select();
+  btn.disabled = false; btn.textContent = 'Save';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast(id ? 'Photo updated' : 'Photo added'); closeModal(); await loadAll();
+}
+async function deleteMedia(id) {
+  if (!confirm('Delete this photo?')) return;
+  const res = await sb.from('shop_media').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked'); return; }
+  toast('Photo deleted'); await loadAll();
+}
+
+/* VIDEO */
+function renderVideo() {
+  const currentUrl = (data.settings.find(s => s.key === 'video_url') || {}).value || '';
+  return `<h1 class="page-title">Video</h1><p class="page-sub">"How We Make It" section on homepage</p>
+    ${currentUrl ? `<div class="video-preview"><iframe src="${esc(currentUrl)}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : `<div class="empty-state"><div class="icon">${IC.video}</div><p>No video configured yet.</p></div>`}
+    <div class="settings-group" style="margin-top:16px;">
+      <h3>Video Embed URL</h3>
+      <form onsubmit="saveVideo(event)">
+        <div class="form-group"><input id="video-url-input" value="${esc(currentUrl)}" placeholder="https://www.youtube.com/embed/VIDEO_ID"><div class="hint">YouTube → Share → Embed → copy src URL (must be /embed/).</div></div>
+        <button type="submit" class="btn btn-primary btn-block" id="video-save">Save Video</button>
+      </form>
+    </div>`;
+}
+async function saveVideo(e) {
+  e.preventDefault(); const btn = $('video-save');
+  const url = $('video-url-input').value.trim();
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const res = await sb.from('store_settings').upsert({ key: 'video_url', value: url }, { onConflict: 'key' });
+  btn.disabled = false; btn.textContent = 'Save Video';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  const idx = data.settings.findIndex(s => s.key === 'video_url');
+  if (idx >= 0) data.settings[idx].value = url; else data.settings.push({ key: 'video_url', value: url });
+  toast('Video saved'); renderTab();
+}
+
+/* FAQS */
+function renderFaqs() {
+  const cards = data.faqs.map(f => `
+    <div class="card">
+      <div class="card-title">${esc(f.question)}</div>
+      <div class="card-meta" style="margin-top:4px;">${esc((f.answer || '').slice(0, 100))}${(f.answer||'').length>100?'...':''}</div>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="editFaq('${esc(String(f.id))}')">${IC.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFaq('${esc(String(f.id))}')">${IC.del} Delete</button>
+        ${f.is_active ? '' : '<span class="pill hidden-status" style="margin-left:auto;">Hidden</span>'}
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;">
+    <div><h1 class="page-title">FAQs</h1><p class="page-sub" style="margin:0;">${data.faqs.length} total</p></div>
+    <button class="btn btn-primary" onclick="editFaq()">${IC.plus} Add</button>
+  </div>
+  ${data.faqs.length === 0 ? `<div class="empty-state"><div class="icon">${IC.help}</div><p>No FAQs yet.</p></div>` : cards}`;
+}
+async function editFaq(id) {
+  let f = {};
+  if (id) {
+    f = findById(data.faqs, id);
+    if (!f) { f = await fetchByIdFromDB('faqs', id); if (!f) { toast('FAQ not found'); return; } }
+  }
+  openModal(id ? 'Edit FAQ' : 'Add FAQ', `
+    <form onsubmit="saveFaq(event, '${esc(String(id || ''))}')">
+      <div class="form-group"><label>Question *</label><input id="f-q" required value="${esc(f.question || '')}"></div>
+      <div class="form-group"><label>Answer *</label><textarea id="f-a" rows="4" required>${esc(f.answer || '')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Sort Order</label><input type="number" id="f-order" value="${f.sort_order ?? 0}"></div>
+        <div class="form-group"><label class="checkbox-label" style="padding-top:26px;"><input type="checkbox" id="f-active" ${f.is_active !== false ? 'checked' : ''}> Active</label></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary" id="f-save">Save</button></div>
+    </form>
+  `);
+}
+async function saveFaq(e, id) {
+  e.preventDefault(); const btn = $('f-save'); btn.disabled = true; btn.textContent = 'Saving...';
+  const payload = { question: $('f-q').value.trim(), answer: $('f-a').value.trim(), sort_order: parseInt($('f-order').value) || 0, is_active: $('f-active').checked };
+  const res = id ? await sb.from('faqs').update(payload).eq('id', id).select() : await sb.from('faqs').insert(payload).select();
+  btn.disabled = false; btn.textContent = 'Save';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast(id ? 'FAQ updated' : 'FAQ added'); closeModal(); await loadAll();
+}
+async function deleteFaq(id) {
+  if (!confirm('Delete this FAQ?')) return;
+  const res = await sb.from('faqs').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked'); return; }
+  toast('FAQ deleted'); await loadAll();
+}
+
+/* TESTIMONIALS */
+function renderTestimonials() {
+  const cards = data.testimonials.map(t => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <div class="card-title">${esc(t.customer_name)}</div>
+        <div style="color:#C9A646;font-size:14px;">${'★'.repeat(t.rating||0)}${'☆'.repeat(5-(t.rating||0))}</div>
+      </div>
+      <div class="card-meta" style="font-style:italic;">"${esc(t.review_text || '')}"</div>
+      <div class="card-actions">
+        <button class="btn btn-outline btn-sm" onclick="editTesti('${esc(String(t.id))}')">${IC.edit} Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTesti('${esc(String(t.id))}')">${IC.del} Delete</button>
+        ${t.is_active ? '' : '<span class="pill hidden-status" style="margin-left:auto;">Hidden</span>'}
+      </div>
+    </div>`).join('');
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;">
+    <div><h1 class="page-title">Reviews</h1><p class="page-sub" style="margin:0;">${data.testimonials.length} total</p></div>
+    <button class="btn btn-primary" onclick="editTesti()">${IC.plus} Add</button>
+  </div>
+  ${data.testimonials.length === 0 ? `<div class="empty-state"><div class="icon">${IC.star}</div><p>No reviews yet.</p></div>` : cards}`;
+}
+async function editTesti(id) {
+  let t = {};
+  if (id) {
+    t = findById(data.testimonials, id);
+    if (!t) { t = await fetchByIdFromDB('testimonials', id); if (!t) { toast('Review not found'); return; } }
+  }
+  openModal(id ? 'Edit Review' : 'Add Review', `
+    <form onsubmit="saveTesti(event, '${esc(String(id || ''))}')">
+      <div class="form-row">
+        <div class="form-group"><label>Customer Name *</label><input id="t-name" required value="${esc(t.customer_name || '')}"></div>
+        <div class="form-group"><label>Rating (1-5) *</label><input type="number" min="1" max="5" id="t-rating" required value="${t.rating || 5}"></div>
+      </div>
+      <div class="form-group"><label>Review Text *</label><textarea id="t-text" rows="3" required>${esc(t.review_text || '')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Sort Order</label><input type="number" id="t-order" value="${t.sort_order ?? 0}"></div>
+        <div class="form-group"><label class="checkbox-label" style="padding-top:26px;"><input type="checkbox" id="t-active" ${t.is_active !== false ? 'checked' : ''}> Active</label></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary" id="t-save">Save</button></div>
+    </form>
+  `);
+}
+async function saveTesti(e, id) {
+  e.preventDefault(); const btn = $('t-save'); btn.disabled = true; btn.textContent = 'Saving...';
+  const payload = { customer_name: $('t-name').value.trim(), review_text: $('t-text').value.trim(), rating: parseInt($('t-rating').value) || 5, sort_order: parseInt($('t-order').value) || 0, is_active: $('t-active').checked };
+  const res = id ? await sb.from('testimonials').update(payload).eq('id', id).select() : await sb.from('testimonials').insert(payload).select();
+  btn.disabled = false; btn.textContent = 'Save';
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked - check RLS'); return; }
+  toast(id ? 'Review updated' : 'Review added'); closeModal(); await loadAll();
+}
+async function deleteTesti(id) {
+  if (!confirm('Delete this review?')) return;
+  const res = await sb.from('testimonials').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { toast('Blocked'); return; }
+  toast('Review deleted'); await loadAll();
+}
+
+/* SETTINGS */
+const KNOWN_SETTINGS = [
+  { key: 'razorpay_key', label: 'Razorpay API Key', type: 'text', hint: 'From Razorpay dashboard', placeholder: 'rzp_live_xxx' },
+  { key: 'google_maps_embed', label: 'Google Maps Embed URL', type: 'textarea', hint: 'Maps → Share → Embed → copy src', placeholder: 'https://www.google.com/maps/embed?pb=...' },
+  { key: 'google_maps_link', label: 'Google Maps Direct Link', type: 'text', hint: 'Maps → Share → Copy link', placeholder: 'https://maps.app.goo.gl/...' }
+];
+function renderSettings() {
+  const map = {}; data.settings.forEach(s => map[s.key] = s.value);
+  const knownHtml = KNOWN_SETTINGS.map(k => {
+    const v = map[k.key] || '';
+    const field = k.type === 'textarea' ? `<textarea id="set-${k.key}" rows="2" placeholder="${esc(k.placeholder)}">${esc(v)}</textarea>` : `<input id="set-${k.key}" value="${esc(v)}" placeholder="${esc(k.placeholder)}">`;
+    return `<div class="form-group"><label>${k.label}</label>${field}${k.hint ? `<div class="hint">${k.hint}</div>` : ''}</div>`;
+  }).join('');
+  return `<h1 class="page-title">Settings</h1><p class="page-sub">Integrations & store config</p>
+    <form onsubmit="saveSettings(event)">
+      <div class="settings-group"><h3>Payment & Integrations</h3>${knownHtml}</div>
+      <button type="submit" class="btn btn-primary btn-block" id="settings-save" style="padding:13px;">Save Settings</button>
+    </form>`;
+}
+async function saveSettings(e) {
+  e.preventDefault(); const btn = $('settings-save'); btn.disabled = true; btn.textContent = 'Saving...';
+  const promises = KNOWN_SETTINGS.map(k => sb.from('store_settings').upsert({ key: k.key, value: $('set-' + k.key)?.value || '' }, { onConflict: 'key' }));
+  const results = await Promise.all(promises);
+  btn.disabled = false; btn.textContent = 'Save Settings';
+  const err = results.find(r => r.error);
+  if (err) { toast('Error: ' + err.error.message); return; }
+  toast('Settings saved'); await loadAll();
+}
+
+/* ADMINS */
+function renderAdmins() {
+  const cards = data.admins.map(a => `
+    <div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div class="card-title" style="word-break:break-all;">${esc(a.email)}</div>
+          <div class="card-meta">Added ${new Date(a.created_at).toLocaleDateString('en-IN')}</div>
+        </div>
+        ${a.email === currentUser.email ? '<span class="pill info">You</span>' : `<button class="btn btn-danger btn-sm" onclick="removeAdmin('${esc(String(a.id))}','${esc(a.email)}')">${IC.del} Remove</button>`}
+      </div>
+    </div>`).join('');
+  return `<h1 class="page-title">Admins</h1><p class="page-sub">Who can access this panel</p>
+    <div class="settings-group">
+      <h3>Add Admin</h3>
+      <p class="hint" style="margin-bottom:10px;">Person must sign up on main site first.</p>
+      <form onsubmit="addAdmin(event)" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="email" id="new-admin" placeholder="email@example.com" required style="flex:1;min-width:180px;">
+        <button type="submit" class="btn btn-primary">${IC.plus} Add</button>
+      </form>
+    </div>
+    ${cards || `<div class="empty-state"><div class="icon">${IC.user}</div><p>No admins.</p></div>`}`;
+}
+async function addAdmin(e) {
+  e.preventDefault();
+  const email = $('new-admin').value.trim().toLowerCase();
+  const res = await sb.from('admin_users').insert({ email }).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  toast('Admin added'); await loadAll();
+}
+async function removeAdmin(id, email) {
+  if (email === currentUser.email) { toast('Cannot remove yourself'); return; }
+  if (!confirm(`Remove ${email}?`)) return;
+  const res = await sb.from('admin_users').delete().eq('id', id).select();
+  if (res.error) { toast('Error: ' + res.error.message); return; }
+  toast('Admin removed'); await loadAll();
+}
+
+boot();
+</script>
+</body>
+</html>
